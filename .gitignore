@@ -1,0 +1,11 @@
+# IDE files
+.idea/
+
+# Logs and other temporary files
+*.log
+*.tmp
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
