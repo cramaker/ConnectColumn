@@ -55,6 +55,34 @@ func TestCreateAndGetGame(t *testing.T) {
 	}
 }
 
+func TestListGames(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	// Create a few test games
+	players1 := []string{"player1", "player2"}
+	players2 := []string{"player3", "player4"}
+	_, err := CreateGame(players1, db)
+	if err != nil {
+		t.Fatalf("failed to create game: %v", err)
+	}
+	_, err = CreateGame(players2, db)
+	if err != nil {
+		t.Fatalf("failed to create game: %v", err)
+	}
+
+	// Test listing the games
+	games, err := ListGames(db)
+	if err != nil {
+		t.Fatalf("failed to list games: %v", err)
+	}
+
+	// Check if the correct number of games are returned
+	if len(games) != 2 {
+		t.Errorf("expected 2 games, got %d", len(games))
+	}
+}
+
 func createTables(db *sql.DB, schemaFile string) error {
 	schema, err := os.ReadFile(schemaFile)
 	if err != nil {
