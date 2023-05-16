@@ -83,6 +83,40 @@ func TestListGames(t *testing.T) {
 	}
 }
 
+func TestValidateMove(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	// create a game
+	players := []string{"player1", "player2", "player3"}
+	game, err := CreateGame(players, db)
+	if err != nil {
+		t.Fatalf("failed to create game: %v", err)
+	}
+
+	// Test a valid move
+	validMove := &Move{
+		Column: 1,
+		Player: "player1",
+	}
+
+	err = ValidateMove(game.ID, validMove, db)
+	if err != nil {
+		t.Errorf("expected move to be valid, but got error: %v", err)
+	}
+
+	// Test an invalid move
+	invalidMove := &Move{
+		Column: 8, // Assuming the board only has 7 columns
+		Player: "player1",
+	}
+
+	err = ValidateMove(game.ID, invalidMove, db)
+	if err == nil {
+		t.Errorf("expected move to be invalid, but didn't get an error")
+	}
+}
+
 func createTables(db *sql.DB, schemaFile string) error {
 	schema, err := os.ReadFile(schemaFile)
 	if err != nil {

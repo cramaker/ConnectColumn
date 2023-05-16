@@ -2,6 +2,7 @@ package game
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -15,6 +16,12 @@ type Game struct {
 	Columns         int
 	Rows            int
 	Players         []string
+}
+
+// Move is the column number where the player wants to drop the token
+type Move struct {
+	Column int
+	Player string
 }
 
 // CreateGame creates a new ConnectColumn game with two or more players
@@ -108,4 +115,31 @@ func ListGames(db *sql.DB) ([]*Game, error) {
 		return nil, fmt.Errorf("failed to read game row: %w", err)
 	}
 	return games, nil
+}
+
+// ValidateMove checks if a move is valid
+func ValidateMove(gameID int64, move *Move, db *sql.DB) error {
+	// Check that the game is not finished
+	game, err := GetGame(gameID, db)
+	if err != nil {
+		return fmt.Errorf("failed to get game: %w", err)
+	}
+	if game.State != "IN_PROGRESS" {
+		return errors.New("cannot make a move in a finished game")
+	}
+	// Check that the right player is making the move
+	if game.Players[game.CurrentPlayer] != move.Player {
+		return errors.New("it's not this player's turn")
+	}
+	// Check that the column is not full
+	var rowCount int
+	row := db.QueryRow("SELECT COUNT(*) FROM moves WHERE game_id = ? AND column = ?", gameID, move.Column)
+	err = row.Scan(&rowCount)
+	if err != nil {
+		return fmt.Errorf("failed to count moves in column: %w", err)
+	}
+	if rowCount >= game.Rows {
+		return errors.New("the column is full")
+	}
+	return nil
 }
