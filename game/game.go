@@ -86,3 +86,26 @@ func GetGame(gameID int64, db *sql.DB) (*Game, error) {
 
 	return gameData, nil
 }
+
+// ListGames fetches all games from the database that are still in progress
+func ListGames(db *sql.DB) ([]*Game, error) {
+	rows, err := db.Query("SELECT * FROM games WHERE state = 'IN_PROGRESS'")
+	if err != nil {
+		return nil, fmt.Errorf("failed to query games: %w", err)
+	}
+	defer rows.Close()
+
+	games := make([]*Game, 0)
+	for rows.Next() {
+		game := new(Game)
+		err := rows.Scan(&game.ID, &game.NumberOfPlayers, &game.CurrentPlayer, &game.State, &game.WinnerID, &game.Columns, &game.Rows)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read game row: %w", err)
+		}
+		games = append(games, game)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to read game row: %w", err)
+	}
+	return games, nil
+}
