@@ -16,6 +16,7 @@ type Game struct {
 	Columns         int
 	Rows            int
 	Players         []string
+	Board           [][]string
 }
 
 // Move is the column number where the player wants to drop the token
